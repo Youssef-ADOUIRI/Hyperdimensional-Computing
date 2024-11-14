@@ -42,9 +42,10 @@ def test_with_centroids(
 ):
     correct = 0
     total = 0
-
+    # model.eval()
     with torch.no_grad():
         for data in testloader:
+
             inputs, labels = data[0].to(device), data[1].to(device)
             encoded_inputs = model(inputs)
 
