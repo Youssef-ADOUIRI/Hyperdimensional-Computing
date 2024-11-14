@@ -173,6 +173,13 @@ class RandomFourierEncoder:
         raw_angles = 2 * np.pi + torch.arctan(pts[:, 1] / pts[:, 0]) - np.pi * (pts[:, 0] < 0).float()
         angles = torch.fmod(raw_angles, 2 * np.pi)
         return torch.floor(angles / (2.0 * np.pi) * self.gorder + 1 / 2)  # torch.fmod( , self.gorder)
+    
+    def group_bundle_manhatten(self, lst):
+        intervals = torch.tensor([2 * np.pi / self.gorder * i for i in range(self.gorder)]) + np.pi / self.gorder
+        pts = torch.sum(self.pts_map(lst), dim=0)
+        raw_angles = 2 * np.pi + torch.arctan(pts[:, 1] / pts[:, 0]) - np.pi * (pts[:, 0] < 0).float()
+        angles = torch.fmod(raw_angles, 2 * np.pi)
+        return torch.floor(angles / (2.0 * np.pi) * self.gorder + 1 / 2)  # torch.fmod( , self.gorder)
 
     '''
     def similarity(self, x, y):

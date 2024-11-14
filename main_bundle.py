@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+from encoder import RandomFourierEncoder
 import torch
 import numpy as np
 import time
@@ -83,11 +84,17 @@ def compute_centroids(trainloader, model, device, num_classes):
             inputs, labels = data[0].to(device), data[1].to(device)
             encoded_inputs = model(inputs)  # Encode inputs using the model
             for i, label in enumerate(labels):
-                centroids[label.item()].append(encoded_inputs[i].cpu().numpy())
+                centroids[label.item()].append(encoded_inputs[i].cpu())
 
-    # Calculate the mean for each class to get the centroids
+    # Use group_bundle to calculate the centroid for each class
     for c in centroids:
-        centroids[c] = torch.tensor(np.mean(centroids[c], axis=0)).to(device)
+        if len(centroids[c]) > 0:
+            centroids[c] = model.group_bundle(torch.stack(centroids[c]).to(device))
+        else:
+            centroids[c] = torch.zeros(
+                encoded_inputs.shape[1], device=device
+            )  # Placeholder if no data for class
+
     return centroids
 
 
@@ -110,7 +117,13 @@ def train(args):
 
     # Compute class centroids after encoding training data
     print("Calculating centroids for each class...")
-    centroids = compute_centroids(trainloader, model, device, num_classes=classes)
+    input_dim = 1000
+    encoder = RandomFourierEncoder(
+        input_dim=input_dim, gamma=args.gamma, gorder=args.gorder, output_dim=args.dim
+    )
+    centroids = compute_centroids(
+        trainloader, model, device, num_classes=classes, encoder=encoder
+    )
 
     # Optionally store centroids for use in testing
     torch.save(centroids, f"{args.data_dir}/centroids.pt")
