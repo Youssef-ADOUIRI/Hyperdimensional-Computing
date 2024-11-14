@@ -46,7 +46,7 @@ def test_with_centroids(
     with torch.no_grad():
         for data in testloader:
             inputs, labels = data[0].to(device), data[1].to(device)
-            encoded_inputs = model(inputs)
+            encoded_inputs = inputs
 
             # Classify based on closest centroid
             for i in range(encoded_inputs.size(0)):
@@ -81,7 +81,7 @@ def compute_centroids(trainloader, model, device, num_classes, encoder):
     with torch.no_grad():
         for data in trainloader:
             inputs, labels = data[0].to(device), data[1].to(device)
-            encoded_inputs = model(inputs)  # Encode inputs using the model
+            encoded_inputs = inputs  # Encode inputs using the model
             for i, label in enumerate(labels):
                 centroids[label.item()].append(encoded_inputs[i].cpu())
 
@@ -117,7 +117,7 @@ def train(args):
     # Compute class centroids after encoding training data
     print("Calculating centroids for each class...")
     encoder = RandomFourierEncoder(
-        input_dim=channels * args.dim,
+        input_dim=10000,
         gamma=args.gamma,
         gorder=args.gorder,
         output_dim=args.dim,
