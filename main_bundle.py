@@ -116,9 +116,11 @@ def train(args):
 
     # Compute class centroids after encoding training data
     print("Calculating centroids for each class...")
-    input_dim = 1000
     encoder = RandomFourierEncoder(
-        input_dim=input_dim, gamma=args.gamma, gorder=args.gorder, output_dim=args.dim
+        input_dim=channels * args.dim,
+        gamma=args.gamma,
+        gorder=args.gorder,
+        output_dim=args.dim,
     )
     encoder.item_mem = torch.load(f"{args.data_dir}/item_mem.pt")
     centroids = compute_centroids(
