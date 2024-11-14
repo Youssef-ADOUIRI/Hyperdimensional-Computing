@@ -122,6 +122,7 @@ def train(args):
     encoder = RandomFourierEncoder(
         input_dim=input_dim, gamma=args.gamma, gorder=args.gorder, output_dim=args.dim
     )
+    encoder.item_mem = torch.load(f"{args.data_dir}/item_mem.pt")
     centroids = compute_centroids(
         trainloader, model, device, num_classes=classes, encoder=encoder
     )
