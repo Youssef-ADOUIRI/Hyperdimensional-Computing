@@ -37,7 +37,9 @@ def test(MODEL, loader, criterion, device, model_="rff-hdc"):
     )
 
 
-def test_with_centroids(testloader, centroids, model, device, metric="manhattan",encoder):
+def test_with_centroids(
+    testloader, centroids, model, device, encoder, metric="manhattan"
+):
     correct = 0
     total = 0
 
@@ -53,15 +55,17 @@ def test_with_centroids(testloader, centroids, model, device, metric="manhattan"
 
                 for c, centroid in centroids.items():
                     if metric == "manhattan":
-                        distance = encoder.similarity(sample , centroid)# to change it later 
+                        distance = encoder.similarity(
+                            sample, centroid
+                        )  # to change it later
                     elif metric == "cosine":
-                        distance = encoder.similarity(sample , centroid)
+                        distance = encoder.similarity(sample, centroid)
                     distances.append((distance, c))
 
                 # Choose the class with the minimum distance for Manhattan
                 if metric == "manhattan":
                     predicted_class = max(distances, key=lambda x: x[0])[1]
-                elif metric == "cosine": # to change it later 
+                elif metric == "cosine":  # to change it later
                     predicted_class = max(distances, key=lambda x: x[0])[1]
 
                 if predicted_class == labels[i].item():
@@ -125,7 +129,9 @@ def train(args):
     # Optionally store centroids for use in testing
     torch.save(centroids, f"{args.data_dir}/centroids.pt")
 
-    test_with_centroids(testloader, centroids, model, device, metric="manhattan")
+    test_with_centroids(
+        testloader, centroids, model, device, metric="manhattan", encoder=encoder
+    )
 
 
 def argument_parser():
