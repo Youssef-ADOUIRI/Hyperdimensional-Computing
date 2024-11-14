@@ -55,16 +55,14 @@ def test_with_centroids(
 
                 for c, centroid in centroids.items():
                     if metric == "manhattan":
-                        distance = encoder.similarity(
-                            sample, centroid
-                        )  # to change it later
+                        distance = encoder.similarity_manhatten(sample, centroid)
                     elif metric == "cosine":
                         distance = encoder.similarity(sample, centroid)
                     distances.append((distance, c))
 
                 # Choose the class with the minimum distance for Manhattan
                 if metric == "manhattan":
-                    predicted_class = max(distances, key=lambda x: x[0])[1]
+                    predicted_class = min(distances, key=lambda x: x[0])[1]
                 elif metric == "cosine":  # to change it later
                     predicted_class = max(distances, key=lambda x: x[0])[1]
 
