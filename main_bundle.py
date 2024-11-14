@@ -89,7 +89,7 @@ def compute_centroids(trainloader, model, device, num_classes, encoder):
     # Use group_bundle to calculate the centroid for each class
     for c in centroids:
         if len(centroids[c]) > 0:
-            centroids[c] = model.group_bundle(torch.stack(centroids[c]).to(device))
+            centroids[c] = encoder.group_bundle(torch.stack(centroids[c]).to(device))
         else:
             centroids[c] = torch.zeros(
                 encoded_inputs.shape[1], device=device
