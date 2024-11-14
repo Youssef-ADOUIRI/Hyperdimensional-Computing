@@ -76,7 +76,7 @@ def test_with_centroids(testloader, centroids, model, device, metric="manhattan"
     return accuracy
 
 
-def compute_centroids(trainloader, model, device, num_classes):
+def compute_centroids(trainloader, model, device, num_classes, encoder):
     centroids = {c: [] for c in range(num_classes)}
 
     with torch.no_grad():
