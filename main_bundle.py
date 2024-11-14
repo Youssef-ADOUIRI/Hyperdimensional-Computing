@@ -46,7 +46,7 @@ def test_with_centroids(
     with torch.no_grad():
         for data in testloader:
             inputs, labels = data[0].to(device), data[1].to(device)
-            encoded_inputs = inputs
+            encoded_inputs = model(inputs)
 
             # Classify based on closest centroid
             for i in range(encoded_inputs.size(0)):
@@ -61,11 +61,15 @@ def test_with_centroids(
                     distances.append((distance, c))
 
                 # Choose the class with the minimum distance for Manhattan
+                distance_values = torch.tensor([d[0] for d in distances])
                 if metric == "manhattan":
-                    predicted_class = min(distances, key=lambda x: x[0])[1]
-                    print(f"{i} : {predicted_class} ,  distances : {distances}")
+                    predicted_index = torch.argmin(distance_values).item()
+                    predicted_class = distances[predicted_index][1]
+
+                    print(f"{i} : {predicted_class}")
                 elif metric == "cosine":  # to change it later
-                    predicted_class = max(distances, key=lambda x: x[0])[1]
+                    predicted_index = torch.argmax(distance_values).item()
+                    predicted_class = distances[predicted_index][1]
 
                 if predicted_class == labels[i].item():
                     correct += 1
@@ -82,7 +86,7 @@ def compute_centroids(trainloader, model, device, num_classes, encoder):
     with torch.no_grad():
         for data in trainloader:
             inputs, labels = data[0].to(device), data[1].to(device)
-            encoded_inputs = inputs  # Encode inputs using the model
+            encoded_inputs = model(inputs)  # Encode inputs using the model
             for i, label in enumerate(labels):
                 centroids[label.item()].append(encoded_inputs[i].cpu())
 
