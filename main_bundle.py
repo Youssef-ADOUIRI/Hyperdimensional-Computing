@@ -63,6 +63,7 @@ def test_with_centroids(
                 # Choose the class with the minimum distance for Manhattan
                 if metric == "manhattan":
                     predicted_class = min(distances, key=lambda x: x[0])[1]
+                    print(f"{i} : {predicted_class} ,  distances : {distances}")
                 elif metric == "cosine":  # to change it later
                     predicted_class = max(distances, key=lambda x: x[0])[1]
 
