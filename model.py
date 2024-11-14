@@ -4,15 +4,15 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 
-'''
+"""
 model for binary hdc
-'''
+"""
 
 
 class FastSign(torch.nn.Module):
-    '''
+    """
     This is a fast version of the SignActivation.
-    '''
+    """
 
     def __init__(self):
         super(FastSign, self).__init__()
@@ -24,14 +24,12 @@ class FastSign(torch.nn.Module):
 
 
 class BinaryLinear(torch.nn.Linear):
-    '''
+    """
     A fully connected layer with weights binarized to {-1, +1}.
-    '''
+    """
 
     def __init__(self, in_features, out_features, bias=True):
-        super(BinaryLinear, self).__init__(
-            in_features, out_features, bias
-        )
+        super(BinaryLinear, self).__init__(in_features, out_features, bias)
         self.binarize = FastSign()
 
     def forward(self, input):
@@ -45,7 +43,7 @@ class BModel(torch.nn.Module):
         self.fc = BinaryLinear(self.in_dim, classes, bias=False)
 
     def forward(self, x):
-        x = self.fc(x) * (1.0 / self.in_dim ** 0.5)
+        x = self.fc(x) * (1.0 / self.in_dim**0.5)
         return x
 
 
@@ -53,10 +51,11 @@ class BModel(torch.nn.Module):
 # model for cyclic group hdc of different order
 # '''
 
+
 class FastRound(torch.nn.Module):
-    '''
+    """
     This is a fast version of the round.
-    '''
+    """
 
     def __init__(self):
         super(FastRound, self).__init__()
@@ -68,14 +67,12 @@ class FastRound(torch.nn.Module):
 
 
 class RoundLinear(torch.nn.Linear):
-    '''
+    """
     A fully connected layer with weights rounded to closest integers
-    '''
+    """
 
     def __init__(self, in_features, out_features, gorder, bias=True):
-        super(RoundLinear, self).__init__(
-            in_features, out_features, bias
-        )
+        super(RoundLinear, self).__init__(in_features, out_features, bias)
         self.gorder = gorder
         self.Bias = bias
         self.round = FastRound()
@@ -108,5 +105,5 @@ class GModel(torch.nn.Module):
         self.fc = RoundLinear(self.in_dim, classes, gorder, bias=False)
 
     def forward(self, x):
-        x = self.fc(x) * (1.0 / self.in_dim ** 0.5)
+        x = self.fc(x) * (1.0 / self.in_dim**0.5)
         return x

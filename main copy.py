@@ -36,52 +36,86 @@ def test(MODEL, loader, criterion, device, model_="rff-hdc"):
     )
 
 
+def test_with_centroids(testloader, centroids, model, device, metric="manhattan"):
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for data in testloader:
+            inputs, labels = data[0].to(device), data[1].to(device)
+            encoded_inputs = model(inputs)
+
+            # Classify based on closest centroid
+            for i in range(encoded_inputs.size(0)):
+                sample = encoded_inputs[i]
+                distances = []
+
+                for c, centroid in centroids.items():
+                    if metric == "manhattan":
+                        distance = torch.sum(torch.abs(sample - centroid))
+                    elif metric == "cosine":
+                        distance = torch.dot(sample, centroid) / (
+                            torch.norm(sample) * torch.norm(centroid)
+                        )
+                    distances.append((distance, c))
+
+                # Choose the class with the minimum distance for Manhattan
+                predicted_class = (
+                    min(distances, key=lambda x: x[0])[1]
+                    if metric == "manhattan"
+                    else max(distances, key=lambda x: x[0])[1]
+                )
+
+                if predicted_class == labels[i].item():
+                    correct += 1
+                total += 1
+
+    accuracy = 100 * correct / total
+    print(f"Accuracy: {accuracy:.2f}%")
+    return accuracy
+
+
+def compute_centroids(trainloader, model, device, num_classes):
+    centroids = {c: [] for c in range(num_classes)}
+
+    with torch.no_grad():
+        for data in trainloader:
+            inputs, labels = data[0].to(device), data[1].to(device)
+            encoded_inputs = model(inputs)  # Encode inputs using the model
+            for i, label in enumerate(labels):
+                centroids[label.item()].append(encoded_inputs[i].cpu().numpy())
+
+    # Calculate the mean for each class to get the centroids
+    for c in centroids:
+        centroids[c] = torch.tensor(np.mean(centroids[c], axis=0)).to(device)
+    return centroids
+
+
 def train(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # criterion = torch.nn.NLLLoss()
     criterion = torch.nn.CrossEntropyLoss()
     channels = 3 if args.dataset == "cifar" else 1
-    if args.dataset == "isolet":
-        classes = 26
-    elif args.dataset == "ucihar":
-        classes = 6
-    else:
-        classes = 10
-    if "hdc" in args.model:
-        model = BModel(in_dim=channels * args.dim, classes=classes).to(device)
-    else:
-        model = GModel(args.gorder, in_dim=channels * args.dim, classes=classes).to(
-            device
-        )
+    classes = (
+        26 if args.dataset == "isolet" else (6 if args.dataset == "ucihar" else 10)
+    )
+
+    # Initialize the model based on the model type
+    model = (
+        BModel(in_dim=channels * args.dim, classes=classes).to(device)
+        if "hdc" in args.model
+        else GModel(args.gorder, in_dim=channels * args.dim, classes=classes).to(device)
+    )
 
     trainloader, testloader = prepare_data(args)
-    #     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)#, momentum=0.9, weight_decay=1.0e-5)
-    #     optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-    for epoch in range(args.epoch):
-        print("Epoch:", epoch + 1)
-        model.train()
-        start_time = time.time()
-        for i, data in enumerate(trainloader, 0):
-            inputs, labels = data[0].to(device), data[1].to(device)
-            optimizer.zero_grad()
-            if args.model == "rff-hdc":
-                outputs = model(2 * inputs - 1)
-            else:
-                outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            _, batch_predicted = torch.max(outputs.data, 1)
-            batch_accu = (
-                100.0 * (batch_predicted == labels).sum().item() / labels.size(0)
-            )
-            if i % 50 == 49:
-                print(i, "{0:.4f}".format(loss.item()), batch_accu)
-        print("Start testing on test set")
-        test(model, testloader, criterion, device, model_=args.model)
-        print("--- %s seconds ---" % (time.time() - start_time))
+    # Compute class centroids after encoding training data
+    print("Calculating centroids for each class...")
+    centroids = compute_centroids(trainloader, model, device, num_classes=classes)
+
+    # Optionally store centroids for use in testing
+    torch.save(centroids, f"{args.data_dir}/centroids.pt")
+
+    test_with_centroids(testloader, centroids, model, device, metric="manhattan")
 
 
 def argument_parser():
