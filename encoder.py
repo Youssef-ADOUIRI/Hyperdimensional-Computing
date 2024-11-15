@@ -210,41 +210,25 @@ class RandomFourierEncoder:
         return results  # torch.fmod(results, self.gorder) # mathematically same
 
     def group_bundle(self, lst):
-        intervals = (
-            torch.tensor([2 * np.pi / self.gorder * i for i in range(self.gorder)])
-            + np.pi / self.gorder
-        )
+        intervals = torch.tensor([2 * np.pi / self.gorder * i for i in range(self.gorder)]) + np.pi / self.gorder
         pts = torch.sum(self.pts_map(lst), dim=0)
-        raw_angles = (
-            2 * np.pi
-            + torch.arctan(pts[:, 1] / pts[:, 0])
-            - np.pi * (pts[:, 0] < 0).float()
-        )
+        raw_angles = 2 * np.pi + torch.arctan(pts[:, 1] / pts[:, 0]) - np.pi * (pts[:, 0] < 0).float()
         angles = torch.fmod(raw_angles, 2 * np.pi)
-        return torch.floor(
-            angles / (2.0 * np.pi) * self.gorder + 1 / 2
-        )  # torch.fmod( , self.gorder)
-
+        return torch.floor(angles / (2.0 * np.pi) * self.gorder + 1 / 2)  # torch.fmod( , self.gorder)
+    
     def group_bundle_manhatten(self, lst):
-        intervals = (
-            torch.tensor([2 * np.pi / self.gorder * i for i in range(self.gorder)])
-            + np.pi / self.gorder
-        )
+        intervals = torch.tensor([2 * np.pi / self.gorder * i for i in range(self.gorder)]) + np.pi / self.gorder
         pts = torch.sum(self.pts_map(lst), dim=0)
-        raw_angles = (
-            2 * np.pi
-            + torch.arctan(pts[:, 1] / pts[:, 0])
-            - np.pi * (pts[:, 0] < 0).float()
-        )
+        raw_angles = 2 * np.pi + torch.arctan(pts[:, 1] / pts[:, 0]) - np.pi * (pts[:, 0] < 0).float()
         angles = torch.fmod(raw_angles, 2 * np.pi)
-        return torch.floor(
-            angles / (2.0 * np.pi) * self.gorder + 1 / 2
-        )  # torch.fmod( , self.gorder)
+        return torch.floor(angles / (2.0 * np.pi) * self.gorder + 1 / 2)  # torch.fmod( , self.gorder)
 
     def similarity(self, x, y):
-        return torch.sum(
-            torch.sum(self.pts_map(x) * self.pts_map(y), dim=-1), dim=-1
-        ) * (1.0 / x.size(-1))
+        return torch.sum(torch.sum(self.pts_map(x) * self.pts_map(y), dim=-1), dim=-1) * (1.0 / x.size(-1))
 
-    def similarity_manhatten(self, x, y):  # to change it later
-        return torch.sum(torch.abs(x - y), dim=-1)  # Manhattan Distance
+    #def similarity_manhatten(self, x, y):  # to change it later
+        return torch.sum(torch.abs(self.pts_map(x) - self.pts_map(y)), dim=-1)  # Manhattan Distance
+    
+    def similarity_manhatten(self, u, v):
+        delta = torch.min((u - v) % self.gorder, (v - u) % self.gorder)
+        return 1- torch.sum(delta)*4/(self.gorder*10000)
