@@ -248,3 +248,4 @@ class RandomFourierEncoder:
 
     def similarity_manhatten(self, x, y):  # to change it later
         return torch.sum(torch.abs(x - y), dim=-1)  # Manhattan Distance
+ 

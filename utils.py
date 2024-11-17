@@ -122,6 +122,7 @@ def encode_and_save(args):
             gorder=args.gorder,
             output_dim=args.dim,
         )
+        print("Encoding with random fourier features encoder. fini")
     else:
         raise ValueError("No such feature type is supported.")
 
