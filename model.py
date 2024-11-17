@@ -10,6 +10,15 @@ model for Perceptron
 """
 
 
+class Perceptron(torch.nn.Module):
+    def _init_(self, input_dim, num_classes):
+        super(Perceptron, self)._init_()
+        self.linear = torch.nn.Linear(input_dim, num_classes)
+
+    def forward(self, x):
+        return self.linear(x.view(x.size(0), -1))
+
+
 """
 model for binary hdc
 """

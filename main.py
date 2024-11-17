@@ -136,9 +136,9 @@ def argument_parser():
     parser.add_argument(
         "-model",
         type=str,
-        choices=["rff-hdc", "linear-hdc", "rff-gvsa"],
+        choices=["rff-hdc", "linear-hdc", "rff-gvsa", "rff-percep"],
         default="rff-gvsa",
-        help="feature and model to use: (rff-hdc | linear-hdc | rff-gvsa)",
+        help="feature and model to use: (rff-hdc | linear-hdc | rff-gvsa |rff-percep)",
     )
     args = parser.parse_args()
     return args

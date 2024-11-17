@@ -246,6 +246,6 @@ class RandomFourierEncoder:
             torch.sum(self.pts_map(x) * self.pts_map(y), dim=-1), dim=-1
         ) * (1.0 / x.size(-1))
 
-    def similarity_manhatten(self, x, y):  # to change it later
-        return torch.sum(torch.abs(x - y), dim=-1)  # Manhattan Distance
- 
+    def similarity_manhatten(self, u, v):
+        delta = torch.min((u - v) % self.gorder, (v - u) % self.gorder)
+        return 1 - torch.sum(delta) * 4 / (self.gorder * 10000)
